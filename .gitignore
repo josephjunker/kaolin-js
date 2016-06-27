@@ -1,0 +1,33 @@
+# Runtime data
+logs
+*.log
+pids
+*.pid
+*.seed
+.lock-wscript
+
+# Test artifacts
+lib-cov
+coverage
+.grunt
+test_results
+
+# Build artifacts
+/build
+lib
+
+# Dependencies
+node_modules
+
+# OS cruft
+.DS_Store
+
+# Local config overrides
+/src/server/config/local/overrides.json
+
+# Editor artifacts
+.idea
+tags
+
+allure-results
+
