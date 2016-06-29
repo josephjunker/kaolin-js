@@ -111,7 +111,7 @@ describe("validators", () => {
     ]);
 
     failingCases(aStruct, [
-      {}, { string: "foo" }, { number: 10 }, { extra: true }, []
+      {}, { string: "foo" }, { number: 10 }, { extra: true }, [], 4
     ]);
   });
 
@@ -287,11 +287,13 @@ describe("validators", () => {
   });
 
   describe("error messages", () => {
-    it("should be pretty", () => {
+    it.only("should be pretty", () => {
       var scope = createScope();
 
+      var aliasedNumber = scope.newType("specialAliasedNumber", _number);
+
       var numberWrapper = scope.newType("numberWrapper", strictStruct({
-        numberField: _number
+        numberField: aliasedNumber
       }));
 
       var stringWrapper = scope.newType("stringWrapper", strictStruct({
@@ -323,26 +325,26 @@ describe("validators", () => {
       var bad1 = cloneDeep(good);
       bad1.a = null;
       var error1 = nestedChecker(bad1);
-      assertMatches(error1, /"nested".*field "a".*Expected.*"boolean".*null/i);
+      assertMatches(error1.message, /"nested".*field "a".*Expected.*"boolean".*null/i);
 
       var bad2 = cloneDeep(good);
       bad2.b.stringField = 5;
       var error2 = nestedChecker(bad2);
-      assertMatches(error2, /"nested".*field "b".*"stringWrapper".*field "stringField".*Expected.*"string".*5/i);
+      assertMatches(error2.message, /"nested".*field "b".*"stringWrapper".*field "stringField".*Expected.*"string".*5/i);
 
       var bad3 = cloneDeep(good);
       bad3.c.numberStruct.numberField = "asdf";
       var error3 = nestedChecker(bad3);
       assertMatches(
-        error3,
-        /"nested".*field "c".*"wrapperWrapper".*field "numberStruct".*"numberWrapper".*field "numberField".*Expected.*"number".*"asdf"/i);
+        error3.message,
+        /"nested".*field "c".*"wrapperWrapper".*field "numberStruct".*"numberWrapper".*field "numberField".*Expected.*"specialAliasedNumber".*"asdf"/i);
 
       var bad4 = cloneDeep(good);
       delete bad4.c.stringStruct.stringField;
       var error4 = nestedChecker(bad4);
       assertMatches(
-        error4,
-        /"nested".*field "c".*"wrapperWrapper".*field "stringStruct".*"stringWrapper".*missing.*field "stringField".*"string"/i);
+        error4.message,
+        /"nested".*field "c".*"wrapperWrapper".*field "stringStruct".*"stringWrapper".*field "stringField".*missing/i);
     });
   });
 });
@@ -379,7 +381,7 @@ function failingCases(type, values) {
 
 function assertMatches(str, regex) {
   if (typeof str !== "string") throw new Error("expected a string, got " + JSON.stringify(str));
-  if (regex.test(str)) return;
+  if (regex.test(str.replace(/\n/g, " "))) return;
   throw new Error("Failed to match string: " + str);
 }
 

@@ -4,7 +4,7 @@ import {mapObject, mergeObjects, zip} from "./utils";
 function descriptorToConstructor(name, argNames) {
   return (...args) => {
     let foo = mergeObjects(
-      { name },
+      { name, meta: {} },
       zip(args, argNames)
         .reduce((acc, [arg, name]) => {
           acc[name] = arg;
@@ -24,7 +24,6 @@ const descriptors = {
   any: [],
   literal: ["value"],
   customPrimitive: ["label"],
-  customCollection: ["label", "args"],
   array: ["contents"],
   laxStruct: ["fields"],
   strictStruct: ["fields"],
@@ -36,8 +35,9 @@ const descriptors = {
 const schemaConstructors = mergeObjects(
   mapObject(descriptors, (args, name) => descriptorToConstructor(name, args)),
   {
-    intersection: (...parents) => ({ name: "intersection", parents}),
-    alternatives: (...options) => ({ name: "alternatives", options})
+    customCollection: (label, ...args) => ({ name: "customCollection", label, args, meta: {} }),
+    intersection: (...parents) => ({ name: "intersection", parents, meta: {}}),
+    alternatives: (...options) => ({ name: "alternatives", options, meta: {}})
   });
 
 export default schemaConstructors;

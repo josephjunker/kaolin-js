@@ -1,99 +1,139 @@
 
-import {mapObject, firstTruthy, arrayDifference, mergeObjects} from "./utils";
+import {mapObject, firstTruthy, arrayDifference, mergeObjects, anyPassing, firstTruthyWithIndex} from "./utils";
 import core from "./core-combinators";
 
-function laxStruct ({fields}, recurse, compiled) {
-  const compiledFields = mapObject(fields, recurse);
-
-  return recurse(core.intersection(
-    core.object(),
-    compiled(x => {
-      let err = firstTruthy(
-        Object.keys(compiledFields),
-        fieldName => compiledFields[fieldName](x[fieldName]));
-
-      if (err) return { found: x, error: err, source: "laxStruct" };
-    }
-    )));
+function addToError(found, original, message) {
+  return {
+    found,
+    message: message + (original.message ? "\n" + original.message : "")
+  };
 }
 
-function strictStruct ({fields}, recurse, compiled) {
-  return recurse(core.intersection(
-    core.laxStruct(fields),
+function laxStruct ({fields, meta}, recurse, compiled) {
+  const compiledFields = mapObject(fields, recurse);
+
+  const descriptor = core.intersection(
+    core.object(),
+    compiled(x => {
+      let [badField, err] = firstTruthy(
+        Object.keys(compiledFields),
+        fieldName => {
+          const error = compiledFields[fieldName](x[fieldName]);
+          return error ? [fieldName, error] : null;
+        }) || [];
+
+      if (err) return meta.silent ? err :
+          err.found === undefined ?
+            { found: x, message: `In type "${meta.typeName || "laxStruct"}", expected a field "${badField}" but it was missing`} :
+            addToError(x, err, `In type "${meta.typeName || "laxStruct"}", in field "${badField}":`);
+    }));
+
+  descriptor.meta.silent = true;
+
+  return recurse(descriptor);
+}
+
+function strictStruct ({fields, meta}, recurse, compiled) {
+  let laxStructDescriptor = core.laxStruct(fields);
+  laxStructDescriptor.meta.typeName = meta.typeName;
+
+  let descriptor = core.intersection(
+    laxStructDescriptor,
     compiled(x => {
       var extraKey = Object.keys(x).find(key => !fields[key]);
       if (extraKey)
-        return { found: x, error: "too many keys", source: "strictStruct" };
-    })));
+        return {
+          found: x,
+          message: `In type "${meta.typeName || "strictStruct"}", found an extra key "${extraKey}".\nAllowed keys: ${Object.keys(fields).map(k => '"' + k + '"').join(", ")}` };
+    }));
+
+  descriptor.meta.silent = true;
+
+  return recurse(descriptor);
 }
 
 function literal({value}) {
-  return x => x !== value ? { found: x } : null;
+  return x => x !== value ? {
+    found: x,
+    message: `Expected the literal value ${JSON.stringify(value)}, but found ${JSON.stringify(x)}`
+  } : null;
 }
 
-function optional({contents}, recurse) {
+function optional({contents, meta}, recurse) {
   const validateContents = recurse(contents);
 
   return x => {
     const error = validateContents(x);
     if (!error || error.found === null || error.found === undefined) return;
-    return { found: x, error, source: "optional"};
+    return addToError(x, error, `In type "${meta.typeName || "Optional"}":`);
   };
 }
 
-function alternatives({options}, recurse) {
+function alternatives({options, meta}, recurse) {
   const compiledOptions = options.map(recurse);
 
   return x => {
     for (let i = 0; i < compiledOptions.length; i++) {
       if (!compiledOptions[i](x)) return;
     }
-    return firstTruthy(compiledOptions, option => !option(x)) ?
+    return anyPassing(compiledOptions, option => !option(x)) ?
       null :
-      { found: x };
+      { found: x, message: `Could not match any of the alternatives in type "${meta.typeName || "Alternatives"}" to the value ${JSON.stringify(x)}` };
   };
 }
 
-function dictionary({keys, values}, recurse, compiled) {
+function dictionary({keys, values, meta}, recurse, compiled) {
   const keyValidator = recurse(keys),
         valueValidator = recurse(values);
 
-  return recurse(
-    core.intersection(
-      core.object(),
-      compiled(x => {
-        const keyErrors = Object.keys(x)
-        .map(keyValidator)
-        .filter(Boolean);
+  let descriptor = core.intersection(
+    core.object(),
+    compiled(x => {
 
-        const valueErrors = Object.keys(x)
-        .map(key => valueValidator(x[key]))
-        .filter(Boolean);
+      const [badKey, keyError] = firstTruthy(
+        Object.keys(x),
+        key => {
+          const error = keyValidator(key);
+          return error ? [key, error] : null;
+        }) || [];
 
-        if (keyErrors.length || valueErrors.length) return {
-          message: `Wrong keys or values in dictionary`,
-          found: x,
-          keyErrors,
-          valueErrors,
-        };
-      })));
+      if (keyError) return addToError(x, keyError, `In type "${meta.typeName || "Dictionary"}", found a key of an unexpected type:`);
+
+      const [badValue, valueError] = firstTruthy(
+        Object.keys(x),
+        key => {
+          const error = valueValidator(x[key]);
+          return error ? [x[key], error] : null;
+        }) || [];
+
+      if (valueError) return addToError(x, valueError, `In type "${meta.typeName || "Dictionary"}", found a value of an unexpected type:`);
+    }));
+
+  descriptor.meta.silent = true;
+
+  return recurse(descriptor);
 }
 
-function _array({contents}, recurse) {
+function _array({contents, meta}, recurse) {
   const contentsValidator = recurse(contents);
   return x => {
     if(!x || !Array.isArray(x)) return {
-      found: x
+      found: x,
+      message: `Expected a value of type "${meta.typeName}" but found: ${JSON.stringify(x)}`
     };
 
-    return firstTruthy(x, contentsValidator);
+    const [error, index] = firstTruthyWithIndex(x, contentsValidator);
+    if (error) return addToError(x, error, `In type "${meta.typeName || "Array"}" at index ${index}:`);
   };
 }
 
-function intersection({parents}, recurse) {
+function intersection({parents, meta}, recurse) {
   const validators = parents.map(recurse);
 
-  return x => firstTruthy(validators, validator => validator(x));
+  return x => {
+    const error = firstTruthy(validators, validator => validator(x));
+    if (error) return meta.silent ? error : addToError(x, error, `In type "${meta.typeName || "Intersection"}":`);
+  };
 }
 
 // We need to evaluate this lazily, because this may be a forward reference,
@@ -102,12 +142,9 @@ function reference({getCompiledTarget}) {
   return x => getCompiledTarget()(x);
 }
 
-function wrapInFunction(x) {
-  return () => x;
-}
-
-function wrapInErrorReturn(tester) {
-  return x => tester(x) ? null : { found: x };
+function compilePrimitive(tester, typeName) {
+  return ({meta}) =>
+    x => tester(x) ? null : { found: x, message: `Expected a value of type "${meta.typeName || typeName}" but found: ${JSON.stringify(x)}` };
 }
 
 const primitives = mapObject({
@@ -117,7 +154,7 @@ const primitives = mapObject({
   function: x => typeof x === "function",
   object: x => (typeof x === "object") && !Array.isArray(x) && (x !== null),
   any: () => true
-}, tester => wrapInFunction(wrapInErrorReturn(tester)));
+}, compilePrimitive);
 
 export default mergeObjects(primitives, {
   literal,

@@ -31,6 +31,23 @@ function firstTruthy(array, mapper) {
   }
 }
 
+function anyPassing(array, predicate) {
+  for (let i = 0; i < array.length; i++) {
+    let result = predicate(array[i]);
+    if (result) return true;
+  }
+  return false;
+}
+
+function firstTruthyWithIndex(array, mapper) {
+  for (let i = 0; i < array.length; i++) {
+    let result = mapper(array[i]);
+    if (result) return [result, i];
+  }
+
+  return [];
+}
+
 function arrayDifference(arr1, arr2) {
   return arr1
     .filter(x => arr2.indexOf(x) === -1)
@@ -50,6 +67,8 @@ export {
   mapObject,
   mergeObjects,
   firstTruthy,
+  anyPassing,
+  firstTruthyWithIndex,
   arrayDifference,
   clone,
   arrayIntersection,
