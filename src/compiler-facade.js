@@ -1,6 +1,7 @@
 
 import compile from "./compiler";
 import validatorInterpreters from "./validator-interpreters";
+import documentationInterpreters from "./documentation-interpreters";
 import {mergeObjects, mapObject, clone} from "./utils";
 
 function compileValidators (scope, customInterpreters = {}) {
@@ -19,7 +20,26 @@ function compileValidators (scope, customInterpreters = {}) {
   return compile(withTypeNames, validatorInterpreters, customInterpreters);
 }
 
+function findFirstNonReference(tree, types, visited=[]) {
+  if (tree.name !== "reference") return tree;
+  if (!types[tree.referenceName] && builtInTypes.indexOf(tree.referenceName === -1))
+    throw `Found a reference to undeclared type ${tree.referenceName}`;
+
+  if (visited.indexOf(tree.referenceName)) throw "Found a reference cycle including type" + tree.referenceName;
+
+  return findFirstNonReference(types[tree.referenceName], types, visited.concat(tree.referenceName));
+}
+
+function compileDocumentation (scope, customInterpreters = {}) {
+  const types = scope.getTypes();
+
+  const referencesResolved = mapObject(types, tree => findFirstNonReference(tree, types));
+
+  return compile(referencesResolved, validatorInterpreters, customInterpreters);
+}
+
 export {
-  compileValidators
+  compileValidators,
+  compileDocumentation
 };
 
