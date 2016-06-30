@@ -17,11 +17,11 @@ const interpreters = {
   intersection: ({parents}, recurse) => parents.map(recurse).join(" & "),
   reference: ({referenceName}) => referenceName,
   string: () => "string",
-  number: () => "string",
-  boolean: () => "string",
-  function: () => "string",
-  object: () => "string",
-  any: () => "string"
+  number: () => "number",
+  boolean: () => "boolean",
+  function: () => "function",
+  object: () => "object",
+  any: () => "any"
 };
 
 export default interpreters;
