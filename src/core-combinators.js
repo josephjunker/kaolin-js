@@ -23,7 +23,6 @@ const descriptors = {
   number: [],
   any: [],
   literal: ["value"],
-  customPrimitive: ["label"],
   array: ["contents"],
   laxStruct: ["fields"],
   strictStruct: ["fields"],
@@ -35,7 +34,7 @@ const descriptors = {
 const schemaConstructors = mergeObjects(
   mapObject(descriptors, (args, name) => descriptorToConstructor(name, args)),
   {
-    customCollection: (label, ...args) => ({ name: "customCollection", label, args, meta: {} }),
+    custom: (label, ...args) => ({ name: "custom", label, args, meta: {} }),
     intersection: (...parents) => ({ name: "intersection", parents, meta: {}}),
     alternatives: (...options) => ({ name: "alternatives", options, meta: {}})
   });

@@ -17,16 +17,17 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters) {
     return interpreters.reference(tree);
   }
 
-  if (name === "customPrimitive" || name === "customCollection") {
+  const recurse = (subtree) => compile(subtree, typeDefinitions, compiledTypes, interpreters);
+
+  if (name === "custom") {
     const customInterpreter = interpreters.custom[tree.label];
     if (!customInterpreter)
       throw `Found a reference to the custom type ${tree.label} but no custom interpreter for this type`;
 
-    return customInterpreter(tree);
+    return customInterpreter(tree, recurse, markAsCompiled);
   }
 
-  const recurse = (subtree) => compile(subtree, typeDefinitions, compiledTypes, interpreters),
-        interpreter = interpreters[name];
+  const interpreter = interpreters[name];
 
   if (!interpreter) throw `Found a reference to the type ${name} but no interpreter for this type`;
 

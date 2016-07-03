@@ -17,7 +17,20 @@ function compileValidators (scope, customInterpreters = {}) {
     return cloned;
   });
 
-  return compile(withTypeNames, validatorInterpreters, customInterpreters);
+  const customWithNiceErrorMessages = mapObject(
+    customInterpreters,
+    (interpreter, typeName) =>
+      (tree, recurse, compiled) => {
+        const bare = interpreter(tree, recurse, compiled),
+              name = tree.meta.typeName;
+        return (x) => {
+          const err = bare(x);
+          if (err) return formatError(err, x, name);
+        };
+      }
+  );
+
+  return compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages);
 }
 
 function findFirstNonReference(tree, types, visited=[]) {
@@ -36,6 +49,13 @@ function compileDocumentation (scope, customInterpreters = {}) {
   const referencesResolved = mapObject(types, tree => findFirstNonReference(tree, types));
 
   return compile(referencesResolved, validatorInterpreters, customInterpreters);
+}
+
+function formatError({message, innerError}, found, name) {
+  return {
+    found,
+    message: `In type "${name}", ${message}${innerError ? ":\n" + innerError.message : ""}`
+  };
 }
 
 export {
