@@ -4,6 +4,11 @@ import {mergeObjects, arrayIntersection} from "./utils";
 const markAsCompiled = (compiledValue) => ({ name: "compiled", compiledValue });
 
 function compile(tree, typeDefinitions, compiledTypes, interpreters) {
+
+  if (typeof tree === "function")
+    throw "Found a function in the type graph. Did you forget to call the creator for a primitive, " +
+          "like passing 'string' instead of 'string()'?";
+
   var name = tree.name;
 
   if (name === "compiled") return tree.compiledValue;

@@ -9,8 +9,36 @@ var compileValidators = main.compileValidators,
 
 describe("custom validators", function () {
 
-  describe.skip("for primitive values", function () {
+  describe("for primitive values", function () {
+    function makeEvenValidator() {
+      return function (x) {
+        if (x % 2 !== 0) return {
+          message: "expected an even number"
+        };
+      };
+    }
 
+    var evenNumberValidator;
+
+    beforeEach(function () {
+      var scope = createScope();
+
+      var evenNumber = scope.newType(
+        "evenNumber",
+        core.intersection(
+          core.number(),
+          core.custom("even")));
+
+      evenNumberValidator = compileValidators(scope, { even: makeEvenValidator }).evenNumber;
+    });
+
+    it("should let you define a new type", function () {
+      pass(evenNumberValidator, 4);
+      pass(evenNumberValidator, 0);
+      fail(evenNumberValidator, 1);
+      fail(evenNumberValidator, false);
+      fail(evenNumberValidator, [0]);
+    });
   });
 
   describe("for collections", function () {
@@ -62,6 +90,9 @@ describe("custom validators", function () {
       assertMatches(tripletChecker(["foo", "bar", true]).message, /strNumBool.*index.*1.*number.*found.*bar/i);
       assertMatches(tripletChecker(["foo", 0, []]).message, /strNumBool.*index.*2.*boolean.*found.*\[\]/i);
     });
+  });
+
+  describe("composing custom collections ", function () {
 
     it.skip("should be able to take itself as an argument", function () {
 
@@ -78,3 +109,12 @@ function assertMatches(str, regex) {
   if (regex.test(str.replace(/\n/g, " "))) return;
   throw new Error("Failed to match string: " + str);
 }
+
+function pass(validator, x) {
+  if (validator(x)) throw new Error("Unexpected Error");
+}
+
+function fail(validator, x) {
+  if (!validator(x)) throw new Error("Expected an error");
+}
+
