@@ -122,7 +122,7 @@ describe("validators", () => {
     });
 
     passingCases(aStruct, [
-      { number: 0, string: "" }//, { number: 10, string: "foo" }
+      { number: 0, string: "" }, { number: 10, string: "foo" }
     ]);
 
     failingCases(aStruct, [
@@ -287,7 +287,7 @@ describe("validators", () => {
   });
 
   describe("error messages", () => {
-    it.only("should be pretty", () => {
+    it("should be pretty", () => {
       var scope = createScope();
 
       var aliasedNumber = scope.newType("specialAliasedNumber", _number);

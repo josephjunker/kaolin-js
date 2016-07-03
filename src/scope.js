@@ -8,6 +8,7 @@ export default () => {
   return {
     // Should eventually check to make sure the definition doesn't have unbound parameters
     newType: (name, definition) => {
+      if (types[name]) throw `Cannot redefine the existing type ${name}`;
       types[name] = clone(definition);
       return core.reference(name);
     },

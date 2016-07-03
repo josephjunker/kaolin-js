@@ -2,7 +2,7 @@
 import compile from "./compiler";
 import validatorInterpreters from "./validator-interpreters";
 import documentationInterpreters from "./documentation-interpreters";
-import {mergeObjects, mapObject, clone} from "./utils";
+import {mergeObjects, mapObject, cloneDeep} from "./utils";
 
 function compileValidators (scope, customInterpreters = {}) {
   const types = scope.getTypes();
@@ -12,7 +12,7 @@ function compileValidators (scope, customInterpreters = {}) {
   });
 
   const withTypeNames = mapObject(types, (value, key) => {
-    let cloned = clone(value);
+    let cloned = cloneDeep(value);
     cloned.meta.typeName = key;
     return cloned;
   });

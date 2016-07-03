@@ -62,6 +62,43 @@ function clone(obj) {
   return mapObject(obj, x => x);
 }
 
+function cloneDeep(obj) {
+  let seen = [],
+      created = [];
+
+  function recursive(x) {
+    const visited = seen.indexOf(x);
+    if (visited !== -1) return created[visited];
+
+    if (Array.isArray(x)) {
+      let newArray = [];
+
+      seen.push(x);
+      created.push(newArray);
+
+      return x.map(recursive);
+    } else if (typeof x === "object") {
+
+      if (x === null) return null;
+
+      let newObj = {};
+
+      seen.push(x);
+      created.push(newObj);
+
+      Object.keys(x).forEach(key => {
+        newObj[key] = recursive(x[key]);
+      });
+
+      return newObj;
+    }
+
+    return x;
+  }
+
+  return recursive(obj);
+}
+
 export {
   oneArgument,
   mapObject,
@@ -71,6 +108,7 @@ export {
   firstTruthyWithIndex,
   arrayDifference,
   clone,
+  cloneDeep,
   arrayIntersection,
   zip
 };
