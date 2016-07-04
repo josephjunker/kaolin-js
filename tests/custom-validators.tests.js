@@ -33,11 +33,8 @@ describe("custom validators", function () {
     });
 
     it("should let you define a new type", function () {
-      pass(evenNumberValidator, 4);
-      pass(evenNumberValidator, 0);
-      fail(evenNumberValidator, 1);
-      fail(evenNumberValidator, false);
-      fail(evenNumberValidator, [0]);
+      passes(evenNumberValidator, [4, 0, -2, 200]);
+      fails(evenNumberValidator, [1, true, 13, {}, [0], [], "2"]);
     });
   });
 
@@ -81,7 +78,10 @@ describe("custom validators", function () {
     });
 
     it("should recognize a valid instance", function () {
-      if (tripletChecker(["foo", 1, true])) throw "Received an error";
+      passes(tripletChecker, [
+        ["foo", 1, true],
+        ["", 0, false]
+      ]);
     });
 
     it("should report nice errors", function () {
@@ -94,12 +94,93 @@ describe("custom validators", function () {
 
   describe("composing custom collections ", function () {
 
-    it.skip("should be able to take itself as an argument", function () {
+    it("should be able to take itself as an argument", function () {
 
+      function binaryTreeInterpreter(typeDescriptor, recurse) {
+        var args = typeDescriptor.args,
+            selfReference = args[0],
+            nodeContents = args[1];
+
+        return recurse(core.laxStruct({
+          left: core.optional(selfReference),
+          right: core.optional(selfReference),
+          contents: nodeContents
+        }));
+      }
+
+      var customInterpreters = { binaryTree: binaryTreeInterpreter };
+
+      var scope = createScope();
+
+      scope.newType("numericTree",
+                    core.custom(
+                      "binaryTree",
+                      core.reference("numericTree"),
+                      core.number()));
+
+      scope.newType("stringTree",
+                    core.custom(
+                      "binaryTree",
+                      core.reference("stringTree"),
+                      core.string()));
+
+      var validators = compileValidators(scope, customInterpreters);
+
+      passes(validators.numericTree, [
+        { contents: 5 },
+        { left: { contents: 3 }, contents: 5, right: { contents: 7 } },
+        { left: { left: { contents: 2 }, contents: 3 }, contents: 5, right: { contents: 7, right: { contents: 8 } } },
+        { left: { left: { contents: 2 }, contents: 3, right: { contents: 4 } }, contents: 5 },
+        { left: { left: { contents: 2, right: { contents: 2.5 } }, contents: 3, right: { contents: 4 } }, contents: 5 }
+      ]);
+
+      fails(validators.numericTree, [
+        {},
+        { left: { contents: 3 }, contents: 5, right: { contents: "foo" } },
+        { left: { left: { contents: 2 }, contents: 3 }, contents: false, right: { contents: 7, right: { contents: 8 } } },
+        { left: { left: {}, contents: 3, right: { contents: 4 } }, contents: 5 },
+        { left: { left: { contents: 2, right: { contents: "bar" } }, contents: 3, right: { contents: 4 } }, contents: 5 }
+      ]);
+
+      passes(validators.stringTree, [
+        { contents: "c" },
+        { left: { left: { contents: "a", right: { contents: "b" } }, contents: "c", right: { contents: "d" } }, contents: "e" }
+      ]);
+
+      fails(validators.stringTree, [
+        {},
+        { left: { left: { contents: "a", right: { contents: "b" } }, right: { contents: "d" } }, contents: "e" },
+        { left: { left: { contents: "a", right: { contents: false } }, contents: "c", right: { contents: "d" } }, contents: "e" }
+      ]);
     });
 
-    it.skip("should be able to take a forward reference to another custom type as an argument", function () {
+    it("should be able to take collections as arguments", function () {
 
+      function wrapperInterpreter(typeDescriptor, recurse) {
+        var container = typeDescriptor.args[0],
+            contained = typeDescriptor.args[1];
+
+        return recurse(container(contained));
+      }
+
+      var customInterpreters = { wrapper: wrapperInterpreter };
+      var scope = createScope();
+
+      var numberArray = scope.newType("numberArray", core.custom("wrapper", core.array, core.number())),
+          numberArrayArray = scope.newType("numberArrayArray", core.custom("wrapper", core.array, numberArray));
+
+      var validators = compileValidators(scope, customInterpreters);
+
+      passes(validators.numberArray, [[], [1], [1, 2], [1, 2, 3]]);
+      fails(validators.numberArray, [1, [true], [1, "foo"]]);
+
+      passes(validators.numberArrayArray, [
+        [[]], [[], []], [[1], [1, 2], [1, 2, 3]]
+      ]);
+
+      fails(validators.numberArrayArray, [
+        [[[]]], [[], [false]], [[], [1], [1, 2], [1, 2, null]]
+      ]);
     });
   });
 });
@@ -110,11 +191,17 @@ function assertMatches(str, regex) {
   throw new Error("Failed to match string: " + str);
 }
 
-function pass(validator, x) {
-  if (validator(x)) throw new Error("Unexpected Error");
+function passes(validator, values) {
+  values.forEach(function (x) {
+    var error = validator(x);
+    if (error !== null && error !== undefined) throw new Error("unexpected error: " + JSON.stringify(error));
+  });
 }
 
-function fail(validator, x) {
-  if (!validator(x)) throw new Error("Expected an error");
+function fails(validator, values) {
+  values.forEach(function (x) {
+    var error = validator(x);
+    if (error === null || error === undefined) throw new Error("expected an error for input: " + JSON.stringify(x));
+  });
 }
 
