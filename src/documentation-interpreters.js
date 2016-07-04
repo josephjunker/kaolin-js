@@ -1,5 +1,5 @@
 
-function struct({meta, fields}, recurse) {
+function struct({fields}, recurse) {
   let fieldList = Object.keys(fields)
     .map(fieldName => `  ${fieldName}: ${recurse(fields[fieldName])}`);
 
@@ -7,7 +7,7 @@ function struct({meta, fields}, recurse) {
 }
 
 const interpreters = {
-  laxStruct: (tree, recurse) => struct(tree, recurse) + "// May contain additional fields",
+  laxStruct: (tree, recurse) => struct(tree, recurse) + " // May contain additional fields",
   strictStruct: struct,
   literal: ({value}) => JSON.stringify(value),
   optional: ({contents}, recurse) => `optional(${recurse(contents)})`,

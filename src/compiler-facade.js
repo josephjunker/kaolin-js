@@ -48,7 +48,7 @@ function compileDocumentation (scope, customInterpreters = {}) {
 
   const referencesResolved = mapObject(types, tree => findFirstNonReference(tree, types));
 
-  return compile(referencesResolved, validatorInterpreters, customInterpreters);
+  return compile(types, documentationInterpreters, customInterpreters);
 }
 
 function formatError({message, innerError}, found, name) {
