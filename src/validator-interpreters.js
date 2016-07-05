@@ -90,21 +90,21 @@ function dictionary({keys, values, meta}, recurse, compiled) {
     core.object(),
     compiled(x => {
 
-      const [badKey, keyError] = firstTruthy(
+      const keyError = firstTruthy(
         Object.keys(x),
         key => {
           const error = keyValidator(key);
-          return error ? [key, error] : null;
-        }) || [];
+          return error ? error : null;
+        });
 
       if (keyError) return addToError(x, keyError, `In type "${meta.typeName || "Dictionary"}", found a key of an unexpected type:`);
 
-      const [badValue, valueError] = firstTruthy(
+      const valueError = firstTruthy(
         Object.keys(x),
         key => {
           const error = valueValidator(x[key]);
-          return error ? [x[key], error] : null;
-        }) || [];
+          return error ? error : null;
+        });
 
       if (valueError) return addToError(x, valueError, `In type "${meta.typeName || "Dictionary"}", found a value of an unexpected type:`);
     }));
