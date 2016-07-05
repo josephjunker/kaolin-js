@@ -4,23 +4,23 @@ var main = require("../lib/main"),
     cloneDeep = require("lodash.clonedeep");
 
 var compileValidators = main.compileValidators,
-    schemaConstructors = main.schemaConstructors,
+    core = main.core,
     createScope = main.createScope;
 
-var _string = schemaConstructors.string(),
-    _number = schemaConstructors.number(),
-    _boolean = schemaConstructors.boolean(),
-    _function = schemaConstructors.function(),
-    any = schemaConstructors.any(),
-    literal = schemaConstructors.literal,
-    _array = schemaConstructors.array,
-    laxStruct = schemaConstructors.laxStruct,
-    strictStruct = schemaConstructors.strictStruct,
-    dictionary = schemaConstructors.dictionary,
-    optional = schemaConstructors.optional,
-    alternatives = schemaConstructors.alternatives,
-    validate = schemaConstructors.validate,
-    reference = schemaConstructors.reference;
+var _string = core.string(),
+    _number = core.number(),
+    _boolean = core.boolean(),
+    _function = core.function(),
+    any = core.any(),
+    literal = core.literal,
+    _array = core.array,
+    laxStruct = core.laxStruct,
+    strictStruct = core.strictStruct,
+    dictionary = core.dictionary,
+    optional = core.optional,
+    alternatives = core.alternatives,
+    validate = core.validate,
+    reference = core.reference;
 
 describe("validators", () => {
 

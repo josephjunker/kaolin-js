@@ -3,12 +3,29 @@ import compile from "./compiler";
 import validatorInterpreters from "./validator-interpreters";
 import documentationInterpreters from "./documentation-interpreters";
 import {mergeObjects, mapObject, cloneDeep} from "./utils";
+import SchemaError from "./schema-error";
+import checkTypeGraph from "./check-type-graph";
 
-function compileValidators (scope, customInterpreters = {}) {
+function wrapInErrorHandler (fn) {
+  return function schemaErrorHandler(...args) {
+    try {
+      return fn(...args);
+    } catch (e) {
+      if (e instanceof SchemaError) {
+        throw new Error(e.errorMessage);
+      }
+      throw e;
+    }
+  };
+}
+
+const compileValidators = wrapInErrorHandler((scope, customInterpreters = {}) => {
   const types = scope.getTypes();
 
+  checkTypeGraph(types);
+
   Object.keys(types).forEach(typeName => {
-    if (validatorInterpreters[typeName]) throw `Cannot re-declare built-in type ${typeName}`;
+    if (validatorInterpreters[typeName]) throw new SchemaError(`Cannot re-declare built-in type ${typeName}`);
   });
 
   const withTypeNames = mapObject(types, (value, key) => {
@@ -31,25 +48,7 @@ function compileValidators (scope, customInterpreters = {}) {
   );
 
   return compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages);
-}
-
-function findFirstNonReference(tree, types, visited=[]) {
-  if (tree.name !== "reference") return tree;
-  if (!types[tree.referenceName] && builtInTypes.indexOf(tree.referenceName === -1))
-    throw `Found a reference to undeclared type ${tree.referenceName}`;
-
-  if (visited.indexOf(tree.referenceName)) throw "Found a reference cycle including type" + tree.referenceName;
-
-  return findFirstNonReference(types[tree.referenceName], types, visited.concat(tree.referenceName));
-}
-
-function compileDocumentation (scope, customInterpreters = {}) {
-  const types = scope.getTypes();
-
-  const referencesResolved = mapObject(types, tree => findFirstNonReference(tree, types));
-
-  return compile(types, documentationInterpreters, customInterpreters);
-}
+});
 
 function formatError({message, innerError}, found, name) {
   return {
@@ -57,6 +56,13 @@ function formatError({message, innerError}, found, name) {
     message: `In type "${name}", ${message}${innerError ? ":\n" + innerError.message : ""}`
   };
 }
+
+const compileDocumentation = wrapInErrorHandler((scope, customInterpreters = {}) => {
+  const types = scope.getTypes();
+  checkTypeGraph(types);
+
+  return compile(types, documentationInterpreters, customInterpreters);
+});
 
 export {
   compileValidators,

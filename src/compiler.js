@@ -1,13 +1,10 @@
 
 import {mergeObjects, arrayIntersection} from "./utils";
+import SchemaError from "./schema-error";
 
 const markAsCompiled = (compiledValue) => ({ name: "compiled", compiledValue });
 
 function compile(tree, typeDefinitions, compiledTypes, interpreters) {
-
-  if (typeof tree === "function")
-    throw "Found a function in the type graph. Did you forget to call the creator for a primitive, " +
-          "like passing 'string' instead of 'string()'?";
 
   var name = tree.name;
 
@@ -15,7 +12,7 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters) {
 
   if (name === "reference") {
     if (!typeDefinitions[tree.referenceName])
-      throw `Found a forward reference to the type "${reference}" but no definition for that type`;
+      throw new SchemaError(`Found a forward reference to the type "${reference}" but no definition for that type`);
 
     tree.getCompiledTarget = () => compiledTypes[tree.referenceName];
 
@@ -27,14 +24,14 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters) {
   if (name === "custom") {
     const customInterpreter = interpreters.custom[tree.label];
     if (!customInterpreter)
-      throw `Found a reference to the custom type ${tree.label} but no custom interpreter for this type`;
+      throw new SchemaError(`Found a reference to the custom type ${tree.label} but no custom interpreter for this type`);
 
     return customInterpreter(tree, recurse, markAsCompiled);
   }
 
   const interpreter = interpreters[name];
 
-  if (!interpreter) throw `Found a reference to the type ${name} but no interpreter for this type`;
+  if (!interpreter) throw new SchemaError(`Found a reference to the type ${name} but no interpreter for this type`);
 
   return interpreter(tree, recurse, markAsCompiled);
 }

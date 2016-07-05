@@ -4,7 +4,7 @@ var main = require("../lib/main"),
     cloneDeep = require("lodash.clonedeep");
 
 var compileValidators = main.compileValidators,
-    core = main.schemaConstructors,
+    core = main.core,
     createScope = main.createScope;
 
 describe("custom validators", function () {

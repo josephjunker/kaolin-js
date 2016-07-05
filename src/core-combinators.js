@@ -1,43 +1,69 @@
 
-import {mapObject, mergeObjects, zip} from "./utils";
+import {mapObject, zip} from "./utils";
 
-function descriptorToConstructor(name, argNames) {
+class TypeNode { }
+
+function makeNodeFactory({plainFields, childFields, objectFields, listField}, name) {
+  const argList = (plainFields || []).concat(childFields || []).concat(objectFields || []);
+
   return (...args) => {
-    let foo = mergeObjects(
-      { name, meta: {} },
-      zip(args, argNames)
-        .reduce((acc, [arg, name]) => {
-          acc[name] = arg;
-          return acc;
-        }, {}));
+    let node = new TypeNode();
+    node.name = name;
+    node.meta = {};
 
-     return foo;
+    const plainArgs = args.slice(0, argList.length),
+          listArgs = args.slice(argList.length);
+
+    zip(argList, plainArgs)
+      .forEach(([fieldName, value]) => node[fieldName] = value);
+
+    if (listField) node[listField] = listArgs;
+
+    return node;
   };
 }
 
-const descriptors = {
-  string: [],
-  boolean: [],
-  function: [],
-  object: [],
-  number: [],
-  any: [],
-  literal: ["value"],
-  array: ["contents"],
-  laxStruct: ["fields"],
-  strictStruct: ["fields"],
-  dictionary: ["keys", "values"],
-  optional: ["contents"],
-  reference: ["referenceName"]
+const schema = {
+  string: {},
+  boolean: {},
+  function: {},
+  object: {},
+  number: {},
+  any: {},
+  literal: {
+    plainFields: ["value"]
+  },
+  array: {
+    childFields: ["contents"]
+  },
+  laxStruct: {
+    objectFields: ["fields"]
+  },
+  strictStruct: {
+    objectFields: ["fields"]
+  },
+  dictionary: {
+    childFields: ["keys", "values"]
+  },
+  optional: {
+    childFields: ["contents"]
+  },
+  reference: {
+    plainFields: ["referenceName"]
+  },
+  custom: {
+    plainFields: ["label"],
+    listField: "args"
+  },
+  intersection: {
+    listField: "parents"
+  },
+  alternatives: {
+    listField: "options"
+  }
 };
 
-const schemaConstructors = mergeObjects(
-  mapObject(descriptors, (args, name) => descriptorToConstructor(name, args)),
-  {
-    custom: (label, ...args) => ({ name: "custom", label, args, meta: {} }),
-    intersection: (...parents) => ({ name: "intersection", parents, meta: {}}),
-    alternatives: (...options) => ({ name: "alternatives", options, meta: {}})
-  });
+const core = mapObject(schema, makeNodeFactory);
 
-export default schemaConstructors;
+export { core, schema, TypeNode };
 

@@ -1,6 +1,6 @@
 
 import {mapObject, firstTruthy, arrayDifference, mergeObjects, anyPassing, firstTruthyWithIndex} from "./utils";
-import core from "./core-combinators";
+import {core} from "./core-combinators";
 
 function addToError(found, original, message) {
   return {

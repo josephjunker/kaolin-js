@@ -4,7 +4,7 @@ var main = require("../lib/main"),
     cloneDeep = require("lodash.clonedeep");
 
 var compileDocumentation = main.compileDocumentation,
-    core = main.schemaConstructors,
+    core = main.core,
     createScope = main.createScope;
 
 describe("documentation smoke test", function () {
