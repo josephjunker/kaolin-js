@@ -4,14 +4,14 @@ import {verifyTreeIsWalkable} from "./verify-tree-is-walkable";
 import * as walkTypeTree from "./walk-tree";
 
 function checkForReferenceCycle(types) {
-  function followReferences(tree, types, visited=[]) {
+  function followReferences(tree, types, visited) {
     if (tree.name !== "reference") return;
-    if (visited.indexOf(tree.referenceName)) return visited;
+    if (visited.indexOf(tree.referenceName) !== -1) return visited.concat(tree.name);
     return followReferences(types[tree.referenceName], types, visited.concat(tree.referenceName));
   }
 
   Object.keys(types).forEach(typeName => {
-    const typeCycle = followReferences(types[typeName], types);
+    const typeCycle = followReferences(types[typeName], types, [typeName]);
     if (typeCycle)
       throw new SchemaError(`Found a reference cycle consisting of types: [${typeCycle.join(", ")}]`, typeName);
   });
@@ -23,7 +23,7 @@ function checkReferenceValidities(types) {
       if (name !== "reference") return;
 
       if (!types[referenceName])
-        throw new SchemaError(`Found a reference to the type "${typeName}", but no definition for that type`);
+        throw new SchemaError(`Found a reference to the type "${referenceName}", but no definition for that type`, typeName);
     });
   });
 }

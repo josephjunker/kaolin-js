@@ -59,7 +59,10 @@ function arrayIntersection(arr1, arr2) {
 }
 
 function clone(obj) {
-  return mapObject(obj, x => x);
+  if (typeof obj === "object")
+    return mapObject(obj, x => x);
+
+  return obj;
 }
 
 function cloneDeep(obj) {

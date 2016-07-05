@@ -25,7 +25,7 @@ const compileValidators = wrapInErrorHandler((scope, customInterpreters = {}) =>
   checkTypeGraph(types);
 
   Object.keys(types).forEach(typeName => {
-    if (validatorInterpreters[typeName]) throw new SchemaError(`Cannot re-declare built-in type ${typeName}`);
+    if (validatorInterpreters[typeName]) throw new SchemaError(`Cannot redefine built-in type ${typeName}`, typeName);
   });
 
   const withTypeNames = mapObject(types, (value, key) => {
