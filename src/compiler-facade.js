@@ -47,7 +47,9 @@ const compileValidators = wrapInErrorHandler((scope, customInterpreters = {}) =>
       }
   );
 
-  return compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages);
+  const compiled = compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages);
+
+  return mapObject(compiled, fn => x => { const err = fn(x); return err && err.message; });
 });
 
 function formatError({message, innerError}, found, name) {

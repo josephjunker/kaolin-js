@@ -85,10 +85,10 @@ describe("custom validators", function () {
     });
 
     it("should report nice errors", function () {
-      assertMatches(tripletChecker({}).message, /strNumBool.*expected.*array.*found.*\{.*\}/i);
-      assertMatches(tripletChecker([]).message, /strNumBool.*array.*length.*3.*found.*0/i);
-      assertMatches(tripletChecker(["foo", "bar", true]).message, /strNumBool.*index.*1.*number.*found.*bar/i);
-      assertMatches(tripletChecker(["foo", 0, []]).message, /strNumBool.*index.*2.*boolean.*found.*\[\]/i);
+      assertMatches(tripletChecker({}), /strNumBool.*expected.*array.*found.*\{.*\}/i);
+      assertMatches(tripletChecker([]), /strNumBool.*array.*length.*3.*found.*0/i);
+      assertMatches(tripletChecker(["foo", "bar", true]), /strNumBool.*index.*1.*number.*found.*bar/i);
+      assertMatches(tripletChecker(["foo", 0, []]), /strNumBool.*index.*2.*boolean.*found.*\[\]/i);
     });
   });
 

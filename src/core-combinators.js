@@ -26,9 +26,9 @@ function makeNodeFactory({plainFields, childFields, objectFields, listField}, na
 const schema = {
   string: {},
   boolean: {},
+  number: {},
   function: {},
   object: {},
-  number: {},
   any: {},
   literal: {
     plainFields: ["value"]

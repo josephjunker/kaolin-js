@@ -325,25 +325,25 @@ describe("validators", () => {
       var bad1 = cloneDeep(good);
       bad1.a = null;
       var error1 = nestedChecker(bad1);
-      assertMatches(error1.message, /"nested".*field "a".*Expected.*"boolean".*null/i);
+      assertMatches(error1, /"nested".*field "a".*Expected.*"boolean".*null/i);
 
       var bad2 = cloneDeep(good);
       bad2.b.stringField = 5;
       var error2 = nestedChecker(bad2);
-      assertMatches(error2.message, /"nested".*field "b".*"stringWrapper".*field "stringField".*Expected.*"string".*5/i);
+      assertMatches(error2, /"nested".*field "b".*"stringWrapper".*field "stringField".*Expected.*"string".*5/i);
 
       var bad3 = cloneDeep(good);
       bad3.c.numberStruct.numberField = "asdf";
       var error3 = nestedChecker(bad3);
       assertMatches(
-        error3.message,
+        error3,
         /"nested".*field "c".*"wrapperWrapper".*field "numberStruct".*"numberWrapper".*field "numberField".*Expected.*"specialAliasedNumber".*"asdf"/i);
 
       var bad4 = cloneDeep(good);
       delete bad4.c.stringStruct.stringField;
       var error4 = nestedChecker(bad4);
       assertMatches(
-        error4.message,
+        error4,
         /"nested".*field "c".*"wrapperWrapper".*field "stringStruct".*"stringWrapper".*field "stringField".*missing/i);
     });
   });
