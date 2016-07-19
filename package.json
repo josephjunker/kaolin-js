@@ -1,10 +1,11 @@
 {
   "name": "schema-combinators",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Tools for validating and documenting schemas",
-  "main": "index.js",
+  "main": "lib/main.js",
   "scripts": {
-    "build": "webpack -p && echo \"require('source-map-support').install();\" | cat - lib/main.js > temp && mv temp lib/main.js",
+    "build": "webpack -p",
+    "dev-build": "webpack -p && echo \"require('source-map-support').install();\" | cat - lib/main.js > temp && mv temp lib/main.js",
     "test": "mocha tests --recursive"
   },
   "author": "Joseph Junker",
