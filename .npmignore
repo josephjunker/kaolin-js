@@ -3,3 +3,6 @@ node_modules
 src
 tests
 webpack.config.js
+.babelrc
+.jshintrc
+.gitignore
