@@ -9,6 +9,7 @@
     "test": "mocha tests --recursive"
   },
   "author": "Joseph Junker",
+  "repository": "https://github.com/JosephJNK/schema-combinators-js",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.9.1",
