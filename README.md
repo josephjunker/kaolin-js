@@ -67,6 +67,7 @@ The contents of `core` are a set of functions, each of which returns a type desc
 
 ### string()
 Returns a typeDescriptor which allows strings.
+
 #### examples
 ```javascript
 scope.newType("username", core.string());
@@ -74,6 +75,7 @@ scope.newType("username", core.string());
 
 ### boolean()
 Returns a typeDescriptor which allows booleans.
+
 #### examples
 ```javascript
 scope.newType("isEnabled", core.boolean());
@@ -81,6 +83,7 @@ scope.newType("isEnabled", core.boolean());
 
 ### number()
 Returns a typeDescriptor which allows numbers.
+
 #### examples
 ```javascript
 scope.newType("score", core.number());
@@ -88,6 +91,7 @@ scope.newType("score", core.number());
 
 ### function()
 Returns a typeDescriptor which allows functions.
+
 #### examples
 ```javascript
 scope.newType("func", core.function());
@@ -95,6 +99,7 @@ scope.newType("func", core.function());
 
 ### object()
 Returns a typeDescriptor which allows objects.
+
 #### examples
 ```javascript
 scope.newType("anyObject", core.object());
@@ -102,6 +107,7 @@ scope.newType("anyObject", core.object());
 
 ### any()
 Returns a typeDescriptor which allows any value.
+
 #### examples
 ```javascript
 scope.newType("anyThing", core.any());
@@ -109,8 +115,10 @@ scope.newType("anyThing", core.any());
 
 ### literal(value)
 Returns a typeDescriptor which allows a specific literal value.  Validation functions will compare their provided value to this value using `===` when determining if their argument conforms to the schema.
+
 #### arguments
 * `value` - a primitive value that can be compared via `===`
+
 #### examples
 ```javascript
 scope.newType("theNumber4", core.literal(4));
@@ -120,8 +128,10 @@ scope.newType("false", core.literal(false));
 
 ### array(contents)
 Returns a typeDescriptor which allows an array of the given type.
+
 #### arguments
 * `contents` - a typeDescriptor
+
 #### examples
 ```javascript
 scope.newType("arrayOfNumbers", core.array(core.number()));
@@ -131,8 +141,10 @@ scope.newType("arrayOfArrayOfStrings", core.array(core.array(core.string())));
 
 ### laxStruct(fields)
 Returns a typeDescriptor which allows objects containing the specified fields. A lax struct validator will accept objects that have more fields than those specified in the typeDescriptor.
+
 #### arguments
 * `fields` - an object whose keys are field names and values are typeDescriptors
+
 #### examples
 ```javascript
 scope.newType("playerInfo", core.laxStruct({
@@ -143,8 +155,10 @@ scope.newType("playerInfo", core.laxStruct({
 
 ### strictStruct(fields)
 Returns a typeDescriptor which allows objects containing the specified fields. A strict struct validator will reject objects that have more fields than those specified in the typeDescriptor.
+
 #### arguments
 * `fields` - an object whose keys are field names and values are typeDescriptors
+
 #### examples
 ```javascript
 scope.newType("playerInfo", core.strictStruct({
@@ -155,9 +169,11 @@ scope.newType("playerInfo", core.strictStruct({
 
 ### dictionary(keys, values)
 Returns a typeDescriptor which allows objects whose keys and values are of the specified types.
+
 #### arguments
 * `keys` - a typeDescriptor for the allowed type of the dictionary's keys. Although JavaScript only allows strings as the keys for objects, [custom types](#customlabel-args) and [intersection](#intersectionparents) can be used to only allow strings which match specific validators
 * `values` - a typeDescriptor for the allowed type of the dictionary's values
+
 #### examples
 ```javascript
 scope.newType("featureFlags", core.dictionary(core.string(), core.boolean()));
@@ -165,8 +181,10 @@ scope.newType("featureFlags", core.dictionary(core.string(), core.boolean()));
 
 ### optional(contents)
 Returns a typeDescriptor which allows values of the given type, or null or undefined. If a field in a struct is marked optional, the struct will accept objects that are missing that field.
+
 #### arguments
 * `contents` - a typeDescriptor for the allowed type
+
 #### examples
 ```javascript
 scope.newType("possiblyNumber", core.optional(core.number()));
@@ -187,11 +205,14 @@ scope.newType("numericTree", core.strictStruct({
   right: core.optional(core.reference("numericTree"))
 });
 ```
+
 ### custom(label, ...args)
 Returns a typeDescriptor for a custom type. Custom types are validated with user-provided validators, as described in [using custom types](#using-custom-types)
+
 #### arguments
 * `label` - a string, the name of the custom type. A custom compiler with this name must be passed to `compileValidators` or `compileDocumentation`, as described in [using custom types](#using-custom-types)
 * `...args` - a variable-length argument list of additional arguments to the custom type
+
 #### examples
 ```javascript
 scope.newType("stringNumberTuple", core.custom("tuple", core.string(), core.number()));
@@ -199,8 +220,10 @@ scope.newType("stringNumberTuple", core.custom("tuple", core.string(), core.numb
 
 ### intersection(...parents)
 Returns a typeDescriptor for a type which matches all of the provided types. This lets you combine types to produce a more specific refinement.
+
 #### arguments
 * `...parents` - a variable-length argument list of typeDescriptors
+
 #### examples
 ```javascript
 const withNumber = scope.newType("structWithNumberField", core.laxStruct({
@@ -211,10 +234,13 @@ const withString = core.laxStruct({ string: core.string() });
 
 scope.newType("structWithNumberAndStringField", core.intersection(withNumber, withString));
 ```
+
 ### alternatives(...options)
 Returns a typeDescriptor for a type which matches any of the provided typeDescriptors.
+
 #### arguments
 * `...options` - a variable-length argument list of typeDescriptors
+
 #### examples
 ```javascript
 scope.newType("arrayOfStringsOrNumbers", core.array(core.alternatives(core.number(), core.string())));
