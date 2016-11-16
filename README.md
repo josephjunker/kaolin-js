@@ -1,4 +1,4 @@
-# Schema Combinators
+# Kaolin-js
 Tools for validating, documenting, and combining data schemas for JavaScript
 
 ## Installation
