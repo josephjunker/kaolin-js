@@ -1,6 +1,6 @@
 "use strict";
 
-var main = require("../lib/main"),
+var main = require("../lib"),
     cloneDeep = require("lodash.clonedeep");
 
 var compileDocumentation = main.compileDocumentation,
