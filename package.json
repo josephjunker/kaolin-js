@@ -1,5 +1,5 @@
 {
-  "name": "schema-combinators",
+  "name": "kaolin",
   "version": "1.0.0",
   "description": "Tools for validating and documenting schemas",
   "main": "lib/main.js",
@@ -9,7 +9,7 @@
     "test": "mocha tests --recursive"
   },
   "author": "Joseph Junker",
-  "repository": "https://github.com/JosephJNK/schema-combinators-js",
+  "repository": "https://github.com/JosephJNK/kaolin-js",
   "license": "MIT",
   "devDependencies": {
     "babel-core": "^6.9.1",
