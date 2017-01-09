@@ -6,12 +6,12 @@ Tools for validating, documenting, and combining data schemas for JavaScript
 
 ## Overview
 
-This library provides a set of combinators (functions that can easily be composed) for describing data schemas. The rules for combining validator functions are flexible, and custom validators may be used, meaning that any schema that you can validate using custom code can be expressed using this tool. Once created, a schema can be converted into multiple forms; currently this means that either validation functions or textual documentation can be created from a schema.
+This library provides a set of composible functions for describing data schemas. The rules for combining validator functions are flexible, and custom validators may be used, meaning that any schema that you can validate using custom code can be expressed using this tool. Once created, a schema can be converted into multiple forms; currently this means that either validation functions or textual documentation can be created from a schema.
 
 Here are some examples of defining types in this system:
 
 ```javascript
-import {core, createScope} from "schema-combinators";
+import {core, createScope} from "kaolin";
 
 const scope = createScope();
 
@@ -35,7 +35,7 @@ const user = scope.newType("user", core.strictStruct({
 Now we can compile this scope:
 
 ```javascript
-import {compileValidators, compileDocumentation} from "schema-combinators";
+import {compileValidators, compileDocumentation} from "kaolin";
 
 const validators = compileValidators(scope),
       documentation = compileDocumentation(scope);
