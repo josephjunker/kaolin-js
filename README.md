@@ -251,6 +251,19 @@ scope.newType("treeWithStringNodes", core.strictStruct({
 });
 ```
 
+### enum(...members)
+Returns a typeDescriptor for a type which is exactly equal to any of the provided values. Equivalent to calling `alternatives` with only `literal` values.
+
+#### arguments
+* `...members` - a variable-length argument list of values
+
+#### examples
+```javascript
+scope.newType("alignment", core.enum("left", "right", "center"));
+
+scope.newType("optionsFlags", core.enum(0, 1, "0", "1", "enabled", "disabled", true, false));
+```
+
 ## Using custom types
 Custom types may be added by providing handlers as an additional
 argument to the compilation functions. A separate handler function must

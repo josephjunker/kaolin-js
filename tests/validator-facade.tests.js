@@ -19,6 +19,7 @@ var _string = core.string(),
     dictionary = core.dictionary,
     optional = core.optional,
     alternatives = core.alternatives,
+    _enum = core.enum,
     validate = core.validate,
     reference = core.reference;
 
@@ -88,6 +89,12 @@ describe("validators", () => {
     failingCases(literal(1), [
       null, undefined, true, false, {}, [], [1], NaN, "", "true", "false", 123, 0, () => {}
     ]);
+  });
+
+  it("enum should match on a member of a set of exact values", () => {
+    passingCases(_enum("foo", "bar", 1, true), ["foo", "bar", 1, true]);
+
+    failingCases(_enum("foo", 1, null), ["undefined", false, true, undefined, 7, "bar"]);
   });
 
   it("array should match if it's an array of the specified type", () => {
