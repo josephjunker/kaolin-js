@@ -1,6 +1,6 @@
 {
   "name": "kaolin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Tools for validating and documenting schemas",
   "main": "lib/index.js",
   "scripts": {
