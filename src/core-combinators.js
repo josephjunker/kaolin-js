@@ -65,11 +65,7 @@ const schema = {
 
 const core = mapObject(schema, makeNodeFactory);
 
-core.enum = (...members) => {
-  const foo = core.alternatives(...(members.map(core.literal)));
-  console.dir(foo);
-  return foo;
-};
+core.enum = (...members) => core.alternatives(...(members.map(core.literal)));
 
 export { core, schema, TypeNode };
 
