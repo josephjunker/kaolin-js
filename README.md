@@ -2,7 +2,7 @@
 Tools for validating, documenting, and combining data schemas for JavaScript
 
 ## Installation
-`npm install schema-combinators`
+`npm install kaolin`
 
 ## Overview
 
