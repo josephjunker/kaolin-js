@@ -4,9 +4,9 @@ import SchemaError from "./schema-error";
 
 const markAsCompiled = (compiledValue) => ({ name: "compiled", compiledValue });
 
-function compile(tree, typeDefinitions, compiledTypes, interpreters) {
+function compile(tree, typeDefinitions, compiledTypes, interpreters, scope) {
 
-  var name = tree.name;
+  let name = tree.name;
 
   if (name === "compiled") return tree.compiledValue;
 
@@ -15,11 +15,12 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters) {
       throw new SchemaError(`Found a forward reference to the type "${reference}" but no definition for that type`);
 
     tree.getCompiledTarget = () => compiledTypes[tree.referenceName];
+    const getInterpreterForType = typeName => compiledTypes[typeName];
 
-    return interpreters.reference(tree);
+    return interpreters.reference(tree, scope.getTypeConverters(), getInterpreterForType);
   }
 
-  const recurse = (subtree) => compile(subtree, typeDefinitions, compiledTypes, interpreters);
+  const recurse = (subtree) => compile(subtree, typeDefinitions, compiledTypes, interpreters, scope);
 
   if (name === "custom") {
     const customInterpreter = interpreters.custom[tree.label];
@@ -36,7 +37,7 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters) {
   return interpreter(tree, recurse, markAsCompiled);
 }
 
-export default function (typeDefinitions, interpreters, customInterpreters) {
+export default function (typeDefinitions, interpreters, customInterpreters, scope) {
 
   const allInterpreters = mergeObjects(interpreters, { custom: customInterpreters });
 
@@ -44,7 +45,7 @@ export default function (typeDefinitions, interpreters, customInterpreters) {
 
   Object.keys(typeDefinitions)
     .forEach(typeName => {
-      compiledDefinitions[typeName] = compile(typeDefinitions[typeName], typeDefinitions, compiledDefinitions, allInterpreters);
+      compiledDefinitions[typeName] = compile(typeDefinitions[typeName], typeDefinitions, compiledDefinitions, allInterpreters, scope);
     });
 
   return compiledDefinitions;

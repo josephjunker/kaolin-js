@@ -102,6 +102,52 @@ function cloneDeep(obj) {
   return recursive(obj);
 }
 
+const updateForKey = (obj, key, fn) => {
+  const newObj = clone(obj) || {};
+
+  newObj[key] = fn(obj[key]);
+
+  return newObj;
+};
+
+const flatMap = (arr, fn) =>
+  (arr || []).reduce((acc, x) => acc.concat(fn(x)), []);
+
+const filterObject = (obj, fn) =>
+  Object.keys(obj || {})
+    .reduce((acc, key) => {
+      if (fn(obj[key], key)) acc[key] = obj[key];
+
+      return acc;
+    }, {});
+
+const mapKeys = (obj, fn) => {
+  const newObj = {};
+  Object.keys(obj).forEach(key => {
+    if (newObj.hasOwnProperty(key)) throw new Error(`key collision in mapKeys: the key ${key} already exists`)
+    newObj[fn(key)] = obj[key];
+  });
+
+  return newObj;
+};
+
+const flipObject = obj => {
+  const newObj = {};
+  Object.keys(obj).forEach(key => {
+    const value = obj[key];
+
+    if (newObj.hasOwnProperty(value))
+      throw new Error(`key collision in flipObject: the key ${value} already exists`);
+
+    if (typeof value !== 'string')
+      throw new Error("error in flipObject: the passed object must only have strings as values");
+
+    newObj[value] = key;
+  });
+
+  return newObj;
+};
+
 export {
   oneArgument,
   mapObject,
@@ -113,6 +159,11 @@ export {
   clone,
   cloneDeep,
   arrayIntersection,
-  zip
+  zip,
+  updateForKey,
+  flatMap,
+  filterObject,
+  mapKeys,
+  flipObject
 };
 

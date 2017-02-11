@@ -1,10 +1,17 @@
 
 import {core} from "./core-combinators";
-import {clone} from "./utils";
+import {clone, flatMap, filterObject, mapObject} from "./utils";
+import findShortestPathTree from "./shortest-path-tree";
 
 export default () => {
   let types = {},
-      metadata = {};
+      metadata = {},
+      typeConverters = {
+        existingConversions: {},
+        bySource: {},
+        byDestination: {}
+      },
+      typeConverterCache = null;
 
   return {
     newType: (name, definition, meta) => {
@@ -13,9 +20,51 @@ export default () => {
       metadata[name] = clone(meta) || {};
       return core.reference(name);
     },
-    getTypes: () => clone(types),
-    getMetadata: () => clone(metadata)
-  };
+    newTypeConverter: (sourceType, destinationType, fn) => {
+      const {existingConversions} = typeConverters;
+      if (existingConversions[sourceType] && existingConversions[sourceType][destinationType])
+        throw new Error(`A conversion already exists from type ${sourceType} to type ${destinationType}`);
 
+      typeConverters.bySource[sourceType] = typeConverters.bySource[sourceType] || {};
+      typeConverters.bySource[sourceType][destinationType] = fn;
+
+      typeConverters.byDestination[destinationType] = typeConverters.byDestination[destinationType] || {};
+      typeConverters.byDestination[destinationType][sourceType] = fn;
+
+      existingConversions[sourceType] = existingConversions[sourceType] || {};
+      existingConversions[sourceType][destinationType] = true;
+
+      typeConverterCache = null;
+    },
+    getTypes: () => clone(types),
+    getMetadata: () => clone(metadata),
+    getTypeConverters: () => {
+      if (typeConverterCache) return typeConverterCache;
+
+      typeConverterCache = compileTypeConversions(typeConverters, types);
+      return typeConverterCache;
+    }
+  };
 };
+
+function compileTypeConversions(typeConverters, types) {
+
+  const links = flatMap(Object.keys(typeConverters.bySource),
+                        source => Object.keys(typeConverters.bySource[source])
+                                    .map(dest => [dest, source])),
+        nodes = Object.keys(types),
+        pathsToTypesByTarget = filterObject(
+          nodes.reduce((acc, type) => {
+            acc[type] = findShortestPathTree(nodes, links, type);
+            return acc;
+          }, {}),
+          x => Boolean(x.length));
+
+  const blah = mapObject(typeConverters.bySource, destToFnMapping => ({ to: destToFnMapping }));
+
+  return {
+    paths: pathsToTypesByTarget,
+    from: mapObject(typeConverters.bySource, destToFnMapping => ({ to: destToFnMapping }))
+  };
+}
 

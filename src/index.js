@@ -1,4 +1,5 @@
-import {compileValidators, compileDocumentation} from "./compiler-facade";
+
+import {compileValidators, compileDocumentation, compileTypeCoercers} from "./compiler-facade";
 import {core} from "./core-combinators";
 import createScope from "./scope";
 import compile from "./compiler";
@@ -10,6 +11,7 @@ const compilerTools = {
 export {
   compileValidators,
   compileDocumentation,
+  compileTypeCoercers,
   core,
   createScope,
   compilerTools

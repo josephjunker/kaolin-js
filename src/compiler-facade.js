@@ -2,9 +2,11 @@
 import compile from "./compiler";
 import validatorInterpreters from "./validator-interpreters";
 import documentationInterpreters from "./documentation-interpreters";
-import {mergeObjects, mapObject, cloneDeep} from "./utils";
+import typeCoercionInterpreters from "./type-coercion-interpreters";
+import {mergeObjects, mapObject, cloneDeep, mapKeys, flipObject} from "./utils";
 import SchemaError from "./schema-error";
 import checkTypeGraph from "./check-type-graph";
+import {core} from "./core-combinators";
 
 function wrapInErrorHandler (fn) {
   return function schemaErrorHandler(...args) {
@@ -47,7 +49,7 @@ const compileValidators = wrapInErrorHandler((scope, customInterpreters = {}) =>
       }
   );
 
-  const compiled = compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages);
+  const compiled = compile(withTypeNames, validatorInterpreters, customWithNiceErrorMessages, scope);
 
   return mapObject(compiled, fn => x => { const err = fn(x); return err && err.message; });
 });
@@ -63,11 +65,37 @@ const compileDocumentation = wrapInErrorHandler((scope, customInterpreters = {})
   const types = scope.getTypes();
   checkTypeGraph(types);
 
-  return compile(types, documentationInterpreters, customInterpreters);
+  return compile(types, documentationInterpreters, customInterpreters, scope);
+});
+
+const compileTypeCoercers = wrapInErrorHandler((scope, customInterpreters = {}) => {
+
+  const gensym = () => Math.floor((1 + Math.random()) * 9999999999999).toString(16);
+
+  const types = scope.getTypes();
+
+  checkTypeGraph(types);
+
+  Object.keys(types).forEach(typeName => {
+    if (typeCoercionInterpreters[typeName]) throw new SchemaError(`Cannot redefine built-in type ${typeName}`, typeName);
+  });
+
+  const aliasesByOriginalName = mapObject(types, gensym),
+        originalNamesByAlias = flipObject(aliasesByOriginalName),
+        typesWithRedirects = mergeObjects(types, mapObject(originalNamesByAlias, core.reference));
+
+  const compiled = compile(typesWithRedirects, typeCoercionInterpreters, customInterpreters, scope);
+
+  return mapObject(aliasesByOriginalName, alias => x => {
+    const {found, failure} = compiled[alias](x);
+    if (found) return found;
+    throw new Error("could not match");
+  });
 });
 
 export {
   compileValidators,
-  compileDocumentation
+  compileDocumentation,
+  compileTypeCoercers
 };
 
