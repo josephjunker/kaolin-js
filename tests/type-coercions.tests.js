@@ -164,39 +164,110 @@ describe("type coercions", () => {
   });
 
   it("should follow a chain of conversions with dead-ends", () => {
+    const scope = createScope();
+
+    scope.newType("sourceType", c.strictStruct({
+      field: c.string()
+    }));
+
+    scope.newType("deadEnd1", c.strictStruct({
+      badField: c.string()
+    }));
+
+    scope.newType("correctStep1", c.strictStruct({
+      stepField: c.string()
+    }));
+
+    scope.newType("deadEnd2", c.strictStruct({
+      anotherBadField: c.string()
+    }));
+
+    scope.newType("deadEnd3", c.strictStruct({
+      badField3: c.string()
+    }));
+
+    scope.newType("targetType", c.strictStruct({
+      target: c.string()
+    }));
+
+    scope.newType("deadEnd4", c.strictStruct({
+      badField4: c.string()
+    }));
+
+    scope.newType("deadEnd5", c.strictStruct({
+      badField5: c.string()
+    }));
+
+    scope.newTypeConverter("sourceType", "deadEnd1", x => ({
+      badField: x.field
+    }));
+
+    scope.newTypeConverter("sourceType", "correctStep1", x => ({
+      stepField: x.field
+    }));
+
+    scope.newTypeConverter("sourceType", "deadEnd2", x => ({
+      anotherBadField: x.field
+    }));
+
+    scope.newTypeConverter("correctStep1", "deadEnd3", x => ({
+      badField3: x.stepField
+    }));
+
+    scope.newTypeConverter("correctStep1", "targetType", x => ({
+      target: x.stepField
+    }));
+
+    scope.newTypeConverter("correctStep1", "deadEnd4", x => ({
+      badField4: x.stepField
+    }));
+
+    scope.newTypeConverter("deadEnd4", "deadEnd5", x => ({
+      badField5: x.badField4
+    }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    const converted = coerce.targetType({
+      field: "foo"
+    });
+
+    expect(converted).to.deep.equal({
+      target: "foo"
+    });
   });
 
-  it("should let you convert keys and values in dictionaries", () => {
+  it.skip("should let you convert keys and values in dictionaries", () => {
   });
 
-  it("should let you convert the contents of lists", () => {
+  it.skip("should let you convert the contents of lists", () => {
   });
 
-  it("should let you convert fields inside lax structs", () => {
+  it.skip("should let you convert fields inside lax structs", () => {
   });
 
-  it("should convert items in an alternatives field", () => {
+  it.skip("should convert items in an alternatives field", () => {
   });
 
-  it("should not convert an alternative if a match is possible later in the alternatives", () => {
+  it.skip("should not convert an alternative if a match is possible later in the alternatives", () => {
   });
 
-  it("should be able to convert one enum to another", () => {
+  it.skip("should be able to convert one enum to another", () => {
   });
 
-  it("should be able to convert an enum to a string or a string to an enum", () => {
+  it.skip("should be able to convert an enum to a string or a string to an enum", () => {
   });
 
-  it("should be able to convert a self-referential recursive structure to another recursive structure", () => {
+  it.skip("should be able to convert a self-referential recursive structure to another recursive structure", () => {
   });
 
-  it("should let you convert a custom type to a built-in type and vice versa", () => {
+  it.skip("should let you convert a custom type to a built-in type and vice versa", () => {
   });
 
-  it("should let you convert one custom type to another", () => {
+  it.skip("should let you convert one custom type to another", () => {
   });
 
-  it("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
+  it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
   });
 
   it("should let you convert primitive types", () => {
@@ -212,10 +283,10 @@ describe("type coercions", () => {
     expect(coerce.myNumber("foo")).to.equal(3);
   });
 
-  it("should let you convert an optional field", () => {
+  it.skip("should let you convert an optional field", () => {
   });
 
-  it("should not convert an optional field if the convertable value is null", () => {
+  it.skip("should not convert an optional field if the convertable value is null", () => {
   });
 
 });
