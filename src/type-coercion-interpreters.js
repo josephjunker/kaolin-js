@@ -11,10 +11,10 @@ function laxStruct ({fields, meta}, recurse, compiled) {
       const fieldsToCheck = Object.keys(compiledFields),
             results = {};
       for (let i = 0; i < fieldsToCheck.length; i++) {
-          const fieldName = fieldsToCheck[i],
-                {found, failure} = compiledFields[fieldName](x[fieldName]);
-          if (failure) return { failure: true };
-          results[fieldName] = found;
+        const fieldName = fieldsToCheck[i],
+              {found, failure} = compiledFields[fieldName](x[fieldName]);
+        if (failure) return { failure: true };
+        results[fieldName] = found;
       }
 
       return { found: results };
@@ -126,9 +126,8 @@ function intersection({parents, meta}, recurse) {
   };
 }
 
-// This is where the type coercion magic will happen
 function reference({getCompiledTarget, referenceName}, typeConverters, getInterpreterForType) {
-  return x => {
+  const check = x => {
     const { failure, found } = getCompiledTarget()(x);
 
     if (!failure) return {found};
@@ -154,11 +153,15 @@ function reference({getCompiledTarget, referenceName}, typeConverters, getInterp
           i++;
         }
 
-        return { found: transformed };
+        // A transformation may only convert one outer layer of a data structure, leaving inner layers in need
+        // of conversions. We recurse to allow these partial-transformations
+        return check(transformed);
       });
 
     return converted || { failure: true };
   };
+
+  return check;
 }
 
 function compilePrimitive(tester, typeName) {

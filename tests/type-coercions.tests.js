@@ -119,46 +119,46 @@ describe("type coercions", () => {
 
     const scope = createScope();
 
-    const a = scope.newType("A", c.strictStruct({
-      foo: c.string()
+    const a = scope.newType("innerSource", c.strictStruct({
+      sourceInnerField: c.string()
     }));
 
-    scope.newType("B", c.strictStruct({
-      bar: a
+    scope.newType("outerSource", c.strictStruct({
+      sourceOuterField: a
     }));
 
-    const d = scope.newType("D", c.strictStruct({
-      baz: c.string()
+    const d = scope.newType("innerTarget", c.strictStruct({
+      targetInnerField: c.string()
     }));
 
-    scope.newType("E", c.strictStruct({
-      qux: d
+    scope.newType("outerTarget", c.strictStruct({
+      targetOuterField: d
     }));
 
-    const aToDCoercion = x => ({
-      baz: x.foo
+    const innerConversion = x => ({
+      targetInnerField: x.sourceInnerField
     });
 
-    const bToEConversion = x => ({
-      qux: x.bar
+    const outerConversion = x => ({
+      targetOuterField: x.sourceOuterField
     });
 
     const data = {
-      bar: {
-        foo: "blah"
+      sourceOuterField: {
+        sourceInnerField: "blah"
       }
     };
 
-    scope.newTypeConverter("A", "D", aToDCoercion);
-    scope.newTypeConverter("B", "E", bToEConversion);
+    scope.newTypeConverter("innerSource", "innerTarget", innerConversion);
+    scope.newTypeConverter("outerSource", "outerTarget", outerConversion);
 
     const coerce = compileTypeCoercers(scope);
 
-    const converted = coerce.E(data);
+    const converted = coerce.outerTarget(data);
 
     expect(converted).to.deep.equal({
-      qux: {
-        baz: "blah"
+      targetOuterField: {
+        targetInnerField: "blah"
       }
     });
   });
