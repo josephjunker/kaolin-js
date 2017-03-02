@@ -237,7 +237,33 @@ describe("type coercions", () => {
     });
   });
 
-  it.skip("should let you convert keys and values in dictionaries", () => {
+  // TODO: need to add a refined type; this whole custom + intersection thing is terrible
+  it("should let you convert keys and values in dictionaries", () => {
+    const scope = createScope();
+
+
+    const shortString = scope.newType("shortString", c.intersection(c.string(), x => x.length < 5));
+
+    const evenNumber = scope.newType("evenNumber", c.intersection(c.number(), x => x % 2 === 0));
+
+    scope.newType("someDictionary", c.dictionary(shortString, evenNumber));
+
+    scope.newTypeConverter("string", "shortString", x => x.slice(0, 4));
+    scope.newTypeConverter("number", "evenNumber", x => x * 2);
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.someDictionary({
+      foo: 2,
+      bar: 3,
+      reallyLongKey: 4,
+      anotherLongKey: 5
+    })).to.deep.equal({
+      foo: 2,
+      bar: 6,
+      real: 4,
+      anot: 10
+    });
   });
 
   it.skip("should let you convert the contents of lists", () => {
