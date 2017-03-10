@@ -66,6 +66,7 @@ function alternatives({options, meta}, recurse) {
 }
 
 function dictionary({keys, values, meta}, recurse, compiled) {
+
   const keyValidator = recurse(keys),
         valueValidator = recurse(values);
 
@@ -86,7 +87,7 @@ function dictionary({keys, values, meta}, recurse, compiled) {
 
         if (valueFailure) return { failure: valueFailure };
 
-        result[key] = foundValue;
+        result[foundKey] = foundValue;
       }
 
       return { found: result };
@@ -126,7 +127,21 @@ function intersection({parents, meta}, recurse) {
   };
 }
 
+// TODO: add this to normal interpreters
+function refined({base, condition}, recurse) {
+  return x => {
+    const { found, failure } = recurse(base)(x);
+
+    if (failure) return { failure };
+
+    if (condition(found)) return { found };
+
+    return { failure: true };
+  };
+}
+
 function reference({getCompiledTarget, referenceName}, typeConverters, getInterpreterForType) {
+
   const check = x => {
     const { failure, found } = getCompiledTarget()(x);
 
@@ -144,8 +159,9 @@ function reference({getCompiledTarget, referenceName}, typeConverters, getInterp
 
         while (i + 1 < path.length) {
           let from = path[i],
-              to = path[i + 1],
-              { failure, found } = getInterpreterForType(from)(transformed);
+              to = path[i + 1];
+
+          let { failure, found } = getInterpreterForType(from)(transformed);
 
           if (failure) return null;
 
@@ -186,6 +202,7 @@ export default mergeObjects(primitives, {
   optional,
   alternatives,
   intersection,
-  reference
+  reference,
+  refined
 });
 

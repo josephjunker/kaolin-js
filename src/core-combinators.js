@@ -33,6 +33,9 @@ const schema = {
   literal: {
     plainFields: ["value"]
   },
+  refined: {
+    plainFields: ["base", "condition"]
+  },
   array: {
     childFields: ["contents"]
   },

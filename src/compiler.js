@@ -15,7 +15,7 @@ function compile(tree, typeDefinitions, compiledTypes, interpreters, scope) {
       throw new SchemaError(`Found a forward reference to the type "${reference}" but no definition for that type`);
 
     tree.getCompiledTarget = () => compiledTypes[tree.referenceName];
-    const getInterpreterForType = typeName => compiledTypes[typeName];
+    const getInterpreterForType = typeName => compiledTypes[typeName] || interpreters[typeName];
 
     return interpreters.reference(tree, scope.getTypeConverters(), getInterpreterForType);
   }

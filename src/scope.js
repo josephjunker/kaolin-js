@@ -1,6 +1,6 @@
 
 import {core} from "./core-combinators";
-import {clone, flatMap, filterObject, mapObject} from "./utils";
+import {clone, flatMap, filterObject, mapObject, mergeObjects} from "./utils";
 import findShortestPathTree from "./shortest-path-tree";
 
 export default () => {
@@ -52,15 +52,13 @@ function compileTypeConversions(typeConverters, types) {
   const links = flatMap(Object.keys(typeConverters.bySource),
                         source => Object.keys(typeConverters.bySource[source])
                                     .map(dest => [dest, source])),
-        nodes = Object.keys(types),
+        nodes = Object.keys(mergeObjects(types, core)),
         pathsToTypesByTarget = filterObject(
           nodes.reduce((acc, type) => {
             acc[type] = findShortestPathTree(nodes, links, type);
             return acc;
           }, {}),
           x => Boolean(x.length));
-
-  const blah = mapObject(typeConverters.bySource, destToFnMapping => ({ to: destToFnMapping }));
 
   return {
     paths: pathsToTypesByTarget,

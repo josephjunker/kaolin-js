@@ -237,14 +237,24 @@ describe("type coercions", () => {
     });
   });
 
-  // TODO: need to add a refined type; this whole custom + intersection thing is terrible
+  it("should let you convert primitive types to refined types", () => {
+    const scope = createScope();
+
+    const shortString = scope.newType("shortString", c.refined(c.string(), x => x.length < 5));
+
+    scope.newTypeConverter("string", "shortString", x => x.slice(0, 4));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.shortString("qwerty")).to.equal("qwer");
+  });
+
   it("should let you convert keys and values in dictionaries", () => {
     const scope = createScope();
 
+    const shortString = scope.newType("shortString", c.refined(c.string(), x => x.length < 5));
 
-    const shortString = scope.newType("shortString", c.intersection(c.string(), x => x.length < 5));
-
-    const evenNumber = scope.newType("evenNumber", c.intersection(c.number(), x => x % 2 === 0));
+    const evenNumber = scope.newType("evenNumber", c.refined(c.number(), x => x % 2 === 0));
 
     scope.newType("someDictionary", c.dictionary(shortString, evenNumber));
 
@@ -296,7 +306,7 @@ describe("type coercions", () => {
   it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
   });
 
-  it("should let you convert primitive types", () => {
+  it("should let you do a basic conversion", () => {
     const scope = createScope();
 
     scope.newType("myString", c.string());
