@@ -4,7 +4,20 @@ const {createScope, compileTypeCoercers, core: c} = require("../lib");
 
 describe("type coercions", () => {
 
-  it("should work for the most basic case", () => {
+  it("should let you do a basic conversion", () => {
+    const scope = createScope();
+
+    scope.newType("myString", c.string());
+    scope.newType("myNumber", c.number());
+
+    scope.newTypeConverter("myString", "myNumber", x => x.length);
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.myNumber("foo")).to.equal(3);
+  });
+
+  it("should work with strict structs", () => {
 
     const scope = createScope();
 
@@ -276,10 +289,35 @@ describe("type coercions", () => {
     });
   });
 
-  it.skip("should let you convert the contents of lists", () => {
+  it("should let you convert the contents of lists", () => {
+    const scope = createScope();
+
+    const from = scope.newType("from", c.strictStruct({
+      foo: c.string()
+    }));
+
+    const to = scope.newType("to", c.strictStruct({
+      bar: c.string()
+    }));
+
+    const someArray = scope.newType("someArray", c.array(to));
+
+    scope.newTypeConverter("from", "to", x => ({ bar: x.foo }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.someArray([
+      { foo: "a" },
+      { bar: "b" },
+      { foo: "c" }
+    ])).to.deep.equal([
+      { bar: "a" },
+      { bar: "b" },
+      { bar: "c" }
+    ]);
   });
 
-  it.skip("should let you convert fields inside lax structs", () => {
+  it.skip("should let you convert lax structs", () => {
   });
 
   it.skip("should convert items in an alternatives field", () => {
@@ -297,26 +335,10 @@ describe("type coercions", () => {
   it.skip("should be able to convert a self-referential recursive structure to another recursive structure", () => {
   });
 
-  it.skip("should let you convert a custom type to a built-in type and vice versa", () => {
-  });
-
   it.skip("should let you convert one custom type to another", () => {
   });
 
   it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
-  });
-
-  it("should let you do a basic conversion", () => {
-    const scope = createScope();
-
-    scope.newType("myString", c.string());
-    scope.newType("myNumber", c.number());
-
-    scope.newTypeConverter("myString", "myNumber", x => x.length);
-
-    const coerce = compileTypeCoercers(scope);
-
-    expect(coerce.myNumber("foo")).to.equal(3);
   });
 
   it.skip("should let you convert an optional field", () => {

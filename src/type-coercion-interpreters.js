@@ -99,11 +99,16 @@ function dictionary({keys, values, meta}, recurse, compiled) {
 function _array({contents, meta}, recurse) {
   const contentsValidator = recurse(contents);
   return x => {
-    if(!x || !Array.isArray(x)) return { failure: true };
+    if (!x || !Array.isArray(x)) return { failure: true };
 
-    return firstTruthy(x, y => contentsValidator(y).failure) ?
-      { failure: true } :
-      { found: x };
+    const results = [];
+    for (let i = 0; i < x.length; i++) {
+      const { failure, found } = contentsValidator(x[i]);
+      if (failure) return { failure: true };
+      results[i] = found;
+    }
+
+    return { found: results };
   };
 }
 
