@@ -317,10 +317,90 @@ describe("type coercions", () => {
     ]);
   });
 
-  it.skip("should let you convert lax structs", () => {
+  it("should let you convert lax structs", () => {
+
+    const scope = createScope();
+
+    const originalInner = scope.newType("originalInner", c.laxStruct({
+      foo: c.string()
+    }));
+
+    const newInner = scope.newType("newInner", c.laxStruct({
+      bar: c.string()
+    }));
+
+    scope.newType("originalOuter", c.laxStruct({
+      baz: newInner
+    }));
+
+    scope.newType("newOuter", c.laxStruct({
+      qux: newInner
+    }));
+
+    scope.newTypeConverter("originalOuter", "newOuter", x => ({ qux: x.baz }));
+    scope.newTypeConverter("originalInner", "newInner", x => ({ bar: x.foo }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.newOuter({
+      baz: {
+        foo: "blah"
+      }
+    })).to.deep.equal({
+      qux: {
+        bar: "blah"
+      }
+    });
   });
 
-  it.skip("should convert items in an alternatives field", () => {
+  it("should convert items in an alternatives field", () => {
+    const scope = createScope();
+
+    const rawContents1 = scope.newType("rawContents1", c.strictStruct({
+      foo: c.string()
+    }));
+
+    const rawContents2 = scope.newType("rawContents2", c.strictStruct({
+      bar: c.string()
+    }));
+
+    const convertedContents1 = scope.newType("convertedContents1", c.strictStruct({
+      baz: c.string()
+    }));
+
+    const convertedContents2 = scope.newType("convertedContents2", c.strictStruct({
+      qux: c.string()
+    }));
+
+    const wrapper = scope.newType("wrapper", c.alternatives(
+      convertedContents1,
+      convertedContents2,
+      c.strictStruct({
+        cat: c.string()
+      })));
+
+    scope.newTypeConverter("rawContents1", "convertedContents1", x => ({ baz: x.foo }));
+    scope.newTypeConverter("rawContents2", "convertedContents2", x => ({ qux: x.bar }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.wrapper({
+      foo: "blah"
+    })).to.deep.equal({
+      baz: "blah"
+    });
+
+    expect(coerce.wrapper({
+      bar: "blah"
+    })).to.deep.equal({
+      qux: "blah"
+    });
+
+    expect(coerce.wrapper({
+      cat: "blah"
+    })).to.deep.equal({
+      cat: "blah"
+    });
   });
 
   it.skip("should not convert an alternative if a match is possible later in the alternatives", () => {

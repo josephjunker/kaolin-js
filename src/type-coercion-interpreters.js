@@ -58,7 +58,8 @@ function alternatives({options, meta}, recurse) {
 
   return x => {
     for (let i = 0; i < compiledOptions.length; i++) {
-      if (!compiledOptions[i](x).failure) return { found: x };
+      const { failure, found } = compiledOptions[i](x);
+      if (!failure) return { found };
     }
 
     return { failure: true };
