@@ -403,10 +403,24 @@ describe("type coercions", () => {
     });
   });
 
-  it.skip("should not convert an alternative if a match is possible later in the alternatives", () => {
-  });
+  it("should be able to convert one enum to another", () => {
 
-  it.skip("should be able to convert one enum to another", () => {
+    const scope = createScope();
+
+    scope.newType("rawEnum", c.enum("first", "second", "third"));
+
+    scope.newType("convertedEnum", c.enum(1, 2, 3));
+
+    scope.newTypeConverter("rawEnum", "convertedEnum", x =>
+                           x === "first"  ? 1 :
+                           x === "second" ? 2 :
+                           /* otherwise */  3);
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.convertedEnum("first")).to.equal(1);
+    expect(coerce.convertedEnum("second")).to.equal(2);
+    expect(coerce.convertedEnum("third")).to.equal(3);
   });
 
   it.skip("should be able to convert an enum to a string or a string to an enum", () => {
@@ -427,5 +441,6 @@ describe("type coercions", () => {
   it.skip("should not convert an optional field if the convertable value is null", () => {
   });
 
+  it("should not convert an alternative if a match is possible later in the alternatives");
 });
 
