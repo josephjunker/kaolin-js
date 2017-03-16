@@ -512,7 +512,5 @@ describe("type coercions", () => {
 
   it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
   });
-
-  it("should not convert an alternative if a match is possible later in the alternatives");
 });
 
