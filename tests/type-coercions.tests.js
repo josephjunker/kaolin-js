@@ -507,7 +507,33 @@ describe("type coercions", () => {
     });
   });
 
-  it.skip("should let you convert one custom type to another", () => {
+  it("should let you convert one custom type to another", () => {
+
+    const scope = createScope();
+
+    scope.newType("even", c.custom("evenNumber"));
+    scope.newType("odd", c.custom("oddNumber"));
+
+    scope.newTypeConverter("odd", "even", x => x * 2);
+
+    const makeOddValidator = () =>
+      x => (typeof x === 'number') && !isNaN(x) && x % 2 === 1 ?
+        { found: x } :
+        { failure: true };
+
+    const makeEvenValidator = () =>
+      x => (typeof x === 'number') && !isNaN(x) && x % 2 === 0 ?
+        { found: x } :
+        { failure: true };
+
+    const coerce = compileTypeCoercers(scope, {
+      evenNumber: makeEvenValidator,
+      oddNumber: makeOddValidator
+    });
+
+    expect(coerce.odd(1)).to.equal(1);
+    expect(coerce.even(2)).to.equal(2);
+    expect(coerce.even(3)).to.equal(6);
   });
 
   it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
