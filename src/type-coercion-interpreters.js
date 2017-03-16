@@ -152,6 +152,8 @@ function reference({getCompiledTarget, referenceName}, typeConverters, getInterp
 
   const check = x => {
 
+    console.log("checking reference for", referenceName, "and value", x);
+
     const { failure, found } = getCompiledTarget()(x);
 
     if (!failure) return {found};

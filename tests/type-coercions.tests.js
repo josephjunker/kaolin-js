@@ -445,10 +445,28 @@ describe("type coercions", () => {
     expect(coerce.target(null)).to.deep.equal(null);
   });
 
-  it.skip("should not convert an optional field if the convertable value is null", () => {
+  it("should not convert an optional field if the convertable value is null", () => {
+
+    const scope = createScope();
+
+    scope.newType("from", c.strictStruct({
+      foo: c.string()
+    }));
+
+    const to = scope.newType("to", c.strictStruct({
+      bar: c.string()
+    }));
+
+    scope.newType("target", c.optional(to));
+
+    scope.newTypeConverter("from", "to", x => ({ bar: x.foo }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.target(null)).to.deep.equal(null);
   });
 
-  it.skip("should be able to convert a self-referential recursive structure to another recursive structure", () => {
+  it("should be able to convert a self-referential recursive structure to another recursive structure", () => {
 
     const scope = createScope();
 
@@ -469,16 +487,6 @@ describe("type coercions", () => {
 
     const coerce = compileTypeCoercers(scope);
 
-    console.dir(coerce.linkedList2({
-      payload: 1,
-      next: {
-        payload: 2,
-        next: {
-          payload: 3
-        }
-      }
-    }));
-
     expect(coerce.linkedList2({
       payload: 1,
       next: {
@@ -497,9 +505,6 @@ describe("type coercions", () => {
         }
       }
     });
-
-    // TODO: add cases where the two are intermingled
-
   });
 
   it.skip("should let you convert one custom type to another", () => {
