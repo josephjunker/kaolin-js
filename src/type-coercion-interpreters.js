@@ -8,6 +8,7 @@ function laxStruct ({fields, meta}, recurse, compiled) {
   const descriptor = core.intersection(
     core.object(),
     compiled(x => {
+
       const fieldsToCheck = Object.keys(compiledFields),
             results = {};
       for (let i = 0; i < fieldsToCheck.length; i++) {
@@ -46,10 +47,11 @@ function optional({contents, meta}, recurse) {
   const validateContents = recurse(contents);
 
   return x => {
-    const {failure} = validateContents(x);
-    return (!failure || x === null || x === undefined) ?
-      { found: x } :
-      { failure: true };
+    if (x === null || x === undefined) return { found: x };
+
+    const {failure, found} = validateContents(x);
+    if (failure) return { failure: true };
+    return { found };
   };
 }
 
@@ -149,6 +151,7 @@ function refined({base, condition}, recurse) {
 function reference({getCompiledTarget, referenceName}, typeConverters, getInterpreterForType) {
 
   const check = x => {
+
     const { failure, found } = getCompiledTarget()(x);
 
     if (!failure) return {found};

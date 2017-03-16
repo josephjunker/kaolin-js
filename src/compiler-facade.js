@@ -88,7 +88,7 @@ const compileTypeCoercers = wrapInErrorHandler((scope, customInterpreters = {}) 
 
   return mapObject(aliasesByOriginalName, alias => x => {
     const {found, failure} = compiled[alias](x);
-    if (found) return found;
+    if (!failure) return found;
     throw new Error("could not match");
   });
 });

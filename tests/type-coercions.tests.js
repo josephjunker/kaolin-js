@@ -423,22 +423,89 @@ describe("type coercions", () => {
     expect(coerce.convertedEnum("third")).to.equal(3);
   });
 
-  it.skip("should be able to convert an enum to a string or a string to an enum", () => {
+  it("should let you convert an optional field", () => {
+
+    const scope = createScope();
+
+    scope.newType("from", c.strictStruct({
+      foo: c.string()
+    }));
+
+    const to = scope.newType("to", c.strictStruct({
+      bar: c.string()
+    }));
+
+    scope.newType("target", c.optional(to));
+
+    scope.newTypeConverter("from", "to", x => ({ bar: x.foo }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.target({ foo: "blah" })).to.deep.equal({ bar: "blah" });
+    expect(coerce.target(null)).to.deep.equal(null);
+  });
+
+  it.skip("should not convert an optional field if the convertable value is null", () => {
   });
 
   it.skip("should be able to convert a self-referential recursive structure to another recursive structure", () => {
+
+    const scope = createScope();
+
+    scope.newType("linkedList1", c.strictStruct({
+      payload: c.number(),
+      next: c.optional(c.reference("linkedList1"))
+    }));
+
+    scope.newType("linkedList2", c.strictStruct({
+      body: c.number(),
+      following: c.optional(c.reference("linkedList2"))
+    }));
+
+    scope.newTypeConverter("linkedList1", "linkedList2", x => ({
+      body: x.payload,
+      following: x.next || null
+    }));
+
+    const coerce = compileTypeCoercers(scope);
+
+    console.dir(coerce.linkedList2({
+      payload: 1,
+      next: {
+        payload: 2,
+        next: {
+          payload: 3
+        }
+      }
+    }));
+
+    expect(coerce.linkedList2({
+      payload: 1,
+      next: {
+        payload: 2,
+        next: {
+          payload: 3
+        }
+      }
+    })).to.deep.equal({
+      body: 1,
+      following: {
+        body: 2,
+        following: {
+          body: 3,
+          following: null
+        }
+      }
+    });
+
+    // TODO: add cases where the two are intermingled
+
   });
 
   it.skip("should let you convert one custom type to another", () => {
   });
 
   it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
-  });
-
-  it.skip("should let you convert an optional field", () => {
-  });
-
-  it.skip("should not convert an optional field if the convertable value is null", () => {
   });
 
   it("should not convert an alternative if a match is possible later in the alternatives");
