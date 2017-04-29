@@ -536,7 +536,127 @@ describe("type coercions", () => {
     expect(coerce.even(3)).to.equal(6);
   });
 
-  it.skip("should handle the composition of dictionaries, structs, and arrays in a complex case", () => {
+  it("should be able to map the contents of an array for a conversion", () => {
+
+    const scope = createScope();
+
+    const someObj = scope.newType("someObj", c.strictStruct({
+      foo: c.string()
+    }));
+
+    scope.newType("arrayOfObjects", c.array(someObj));
+
+    scope.newTypeConverter("string", "someObj", x => ({ foo: x }));
+
+    const coerce = compileTypeCoercers(scope);
+    expect(coerce.arrayOfObjects(['a', 'b', 'c'])).to.deep.equal([
+      { foo: 'a' },
+      { foo: 'b' },
+      { foo: 'c' }
+    ]);
+  });
+
+  it("should be able to map the contents of an array twice for a conversion", () => {
+
+    const scope = createScope();
+
+    const someObj = scope.newType("someObj", c.strictStruct({
+      foo: c.string()
+    }));
+
+    const anotherObj = scope.newType("anotherObj", c.strictStruct({
+      bar: c.string()
+    }));
+
+    scope.newType("arrayOfObjects", c.array(anotherObj));
+
+    scope.newTypeConverter("string", "someObj", x => ({ foo: x }));
+    scope.newTypeConverter("someObj", "anotherObj", x => ({ bar: x.foo }));
+
+    const coerce = compileTypeCoercers(scope);
+    expect(coerce.arrayOfObjects(['a', 'b', 'c'])).to.deep.equal([
+      { bar: 'a' },
+      { bar: 'b' },
+      { bar: 'c' }
+    ]);
+  });
+
+  it("should be able to map an object to an array for a conversion", () => {
+
+    const scope = createScope();
+
+    scope.newType("someStruct", c.strictStruct({
+      foo: c.string(),
+      bar: c.string()
+    }));
+
+    scope.newType("arrayOfStrings", c.array(c.string()));
+
+    scope.newTypeConverter("someStruct", "arrayOfStrings", x => ([ x.foo, x.bar ]));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.arrayOfStrings({
+      foo: "a",
+      bar: "b"
+    })).to.deep.equal([
+      "a",
+      "b"
+    ]);
+  });
+
+  it("should be able to map an array to a single object", () => {
+
+    const scope = createScope();
+
+    scope.newType("arrayOfStrings", c.array(c.string()));
+
+    scope.newType("someStruct", c.strictStruct({
+      foo: c.string(),
+      bar: c.string()
+    }));
+
+    scope.newTypeConverter("arrayOfStrings", "someStruct", x => ({foo: x[0], bar: x[1]}));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.someStruct([
+      "a",
+      "b"
+    ])).to.deep.equal({
+      foo: "a",
+      bar: "b"
+    });
+  });
+
+  it("should be able to map an object to an array to an object", () => {
+
+    const scope = createScope();
+
+    scope.newType("someStruct", c.strictStruct({
+      foo: c.string(),
+      bar: c.string()
+    }));
+
+    scope.newType("arrayOfStrings", c.array(c.string()));
+
+    scope.newType("anotherStruct", c.strictStruct({
+      baz: c.string(),
+      qux: c.string()
+    }));
+
+    scope.newTypeConverter("someStruct", "arrayOfStrings", x => [x.foo, x.bar]);
+    scope.newTypeConverter("arrayOfStrings", "anotherStruct", x => ({baz: x[0], qux: x[1]}));
+
+    const coerce = compileTypeCoercers(scope);
+
+    expect(coerce.anotherStruct({
+      foo: "a",
+      bar: "b"
+    })).to.deep.equal({
+      baz: "a",
+      qux: "b"
+    });
   });
 });
 
