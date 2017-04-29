@@ -156,6 +156,22 @@ const primitives = mapObject({
   any: () => true
 }, compilePrimitive);
 
+function refined({base, condition, meta}, recurse) {
+  return x => {
+    const err = recurse(base)(x);
+
+    if (err) return {
+      found: x,
+      message: `Could not match the base type when trying to match "${meta.typeName}":\n${err.message}`
+    };
+
+    if (!condition(x)) return {
+      found: x,
+      message: `Condition failed when trying to match "${meta.typeName}" to value: ${JSON.stringify(x)}`
+    };
+  };
+}
+
 export default mergeObjects(primitives, {
   literal,
   array: _array,
@@ -165,6 +181,7 @@ export default mergeObjects(primitives, {
   optional,
   alternatives,
   intersection,
-  reference
+  reference,
+  refined
 });
 

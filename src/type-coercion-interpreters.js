@@ -135,7 +135,6 @@ function intersection({parents, meta}, recurse) {
   };
 }
 
-// TODO: add this to normal interpreters
 function refined({base, condition}, recurse) {
   return x => {
     const { found, failure } = recurse(base)(x);

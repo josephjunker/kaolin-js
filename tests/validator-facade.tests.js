@@ -21,7 +21,8 @@ var _string = core.string(),
     alternatives = core.alternatives,
     _enum = core.enum,
     validate = core.validate,
-    reference = core.reference;
+    reference = core.reference,
+    refined = core.refined;
 
 describe("validators", () => {
 
@@ -352,6 +353,64 @@ describe("validators", () => {
       assertMatches(
         error4,
         /"nested".*field "c".*"wrapperWrapper".*field "stringStruct".*"stringWrapper".*field "stringField".*missing/i);
+    });
+  });
+
+  describe("refined types", () => {
+
+    const shortString = refined(_string, x => x.length < 5);
+    const smallDictionary = refined(dictionary(_string, _number), x => Object.keys(x).length < 4);
+    const evenNumber = refined(_number, x => x % 2 === 0);
+
+    it("should pass in basic cases", () => {
+      passingCases(shortString, ["", "a", "sdfs"]);
+
+      passingCases(smallDictionary, [
+        {},
+        { a: 1 },
+        { a: 1, b: 2 },
+        { a: 1, b: 2, c: 3 },
+      ]);
+
+      passingCases(evenNumber, [0, 2, 4, 9000]);
+    });
+
+    it("should fail if the base type doesn't validate", () => {
+      failingCases(shortString, [null, 4, {}, [], { length: 2 }]);
+      failingCases(smallDictionary, [null, 0, 1, [], { a: "b" }]);
+      failingCases(evenNumber, [null, 1, {}, []]);
+    });
+
+    it("should fail if the condition doesn't pass", () => {
+      failingCases(shortString, ["adsfsdf", "werqewrq", "vzxxcv"]);
+      failingCases(smallDictionary, [ { a: 1, b: 2, c: 3, d: 4 } ]);
+      failingCases(evenNumber, [1, 3, 5]);
+    });
+
+    it("should compose with other refined types", () => {
+      const largeEvenNumber = refined(evenNumber, x => x > 100);
+      const oddDictionary = refined(smallDictionary, x => {
+        const evens = Object.keys(x).filter(key => x[key] % 2 === 0);
+        return evens.length === 0;
+      });
+
+      passingCases(largeEvenNumber, [ 102, 204, 1000 ]);
+      failingCases(largeEvenNumber, [ 1, 101, null, "foo" ]);
+
+      passingCases(oddDictionary, [
+        {},
+        { x: 1 },
+        { x: 1, y: 3 },
+        { x: 1, y: 3, z: 5 }
+      ]);
+      failingCases(oddDictionary, [
+        { x: 1, y: 3, z: 5, zz: 7 },
+        null,
+        { x: 1, y: 3, z: 5, zz: 8 },
+        { z: 6 },
+        "foo",
+        []
+      ]);
     });
   });
 });

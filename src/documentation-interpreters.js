@@ -21,7 +21,8 @@ const interpreters = {
   boolean: () => "boolean",
   function: () => "function",
   object: () => "object",
-  any: () => "any"
+  any: () => "any",
+  refined: ({base}) => `refinement of ${base}`
 };
 
 export default interpreters;
